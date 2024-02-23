@@ -1,0 +1,8 @@
+digraph G {
+"map" -> "base_link"[label="Broadcaster: /simple_slam_node_gaussian\nAverage rate: 6.908 Hz\nMost recent transform: 1708398078.806 ( 0.147 sec old)\nBuffer length: 4.777 sec\n"];
+"base_link" -> "laser"[label="Broadcaster: /simple_slam_node_gaussian\nAverage rate: 6.908 Hz\nMost recent transform: 1708398078.806 ( 0.147 sec old)\nBuffer length: 4.777 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1708398078.953"[ shape=plaintext ] ;
+ }->"map";
+}

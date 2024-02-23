@@ -1,0 +1,15 @@
+<!-- slam_rplidar_a1.launch -->
+<launch>
+    <!-- RPLIDAR A1 노드 실행 -->
+    <include file="$(find rplidar_ros)/launch/rplidar_a1.launch" />
+
+    <!-- Simple SLAM 노드 실행 -->
+    <node name="simple_slam_node_gaussian" pkg="simple_slam" type="simple_slam_node_gaussian" output="screen">
+        <!-- SLAM 파라미터 설정 파일 로드 -->
+        <rosparam file="$(find simple_slam)/config/slam_params.yaml" command="load" ns="simple_slam"/>
+    </node>
+
+    <!-- RViz 실행 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find simple_slam)/config/simple_slam.rviz" />
+</launch>
+

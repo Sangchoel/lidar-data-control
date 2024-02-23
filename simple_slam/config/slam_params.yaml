@@ -1,0 +1,8 @@
+simple_slam:
+  map_width: 200
+  map_height: 200
+  map_resolution: 0.05
+  robot_initial_x: 100.0
+  robot_initial_y: 100.0
+  robot_initial_theta: 0.0
+
