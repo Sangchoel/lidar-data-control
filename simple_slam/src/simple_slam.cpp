@@ -1,96 +1,61 @@
-#include <ros/ros.h>
-#include <sensor_msgs/LaserScan.h>
-#include <nav_msgs/OccupancyGrid.h>
+#include <ros/ros.h> // ROS 헤더 파일
+#include <sensor_msgs/LaserScan.h> // 라이다 스캔 메시지 헤더
+#include <nav_msgs/OccupancyGrid.h> // 점유 격자 맵 메시지 헤더
 #include <vector>
 #include <cmath>
 
-class LidarProcessor {
-public:
-    LidarProcessor() {}
-
-    std::vector<std::pair<float, float>> processScan(const sensor_msgs::LaserScan::ConstPtr& scan) {
-        std::vector<std::pair<float, float>> obstacles;
-
-        for (unsigned int i = 0; i < scan->ranges.size(); ++i) {
-            float angle = scan->angle_min + i * scan->angle_increment;
-            float distance = scan->ranges[i];
-            if (distance > scan->range_min && distance < scan->range_max) {
-                float x = distance * cos(angle);
-                float y = distance * sin(angle);
-                obstacles.push_back(std::make_pair(x, y));
-            }
-        }
-        return obstacles;
-    }
-};
-
-
-class MapManager {
-public:
-    MapManager(int width, int height) : width_(width), height_(height) {
-        map_.resize(width_ * height_, -1);
-    }
-
-    void updateMap(const std::vector<std::pair<float, float>>& obstacles) {
-        for (auto& obstacle : obstacles) {
-            int x = static_cast<int>(obstacle.first + width_ / 2); // 맵 중앙을 기준으로 위치 조정
-            int y = static_cast<int>(obstacle.second + height_ / 2); // 맵 중앙을 기준으로 위치 조정
-            if (x >= 0 && x < width_ && y >= 0 && y < height_) {
-                map_[y * width_ + x] = 100; 
-            }
+// 라이다 데이터를 처리하는 함수
+std::vector<std::pair<float, float>> processScan(const sensor_msgs::LaserScan::ConstPtr& scan) {
+    std::vector<std::pair<float, float>> obstacles;
+    for (unsigned int i = 0; i < scan->ranges.size(); ++i) {
+        float angle = scan->angle_min + i * scan->angle_increment;
+        float distance = scan->ranges[i];
+        if (distance > scan->range_min && distance < scan->range_max) {
+            float x = distance * cos(angle);
+            float y = distance * sin(angle);
+            obstacles.push_back(std::make_pair(x, y));
         }
     }
+    return obstacles;
+}
 
-    void publishMap(ros::Publisher& map_pub) {
-        nav_msgs::OccupancyGrid grid;
-        grid.header.stamp = ros::Time::now();
-        grid.header.frame_id = "map";
-        grid.info.width = width_;
-        grid.info.height = height_;
-        grid.info.origin.position.x = 0; 
-        grid.info.origin.position.y = 0;
-        grid.data.assign(map_.begin(), map_.end());
-        map_pub.publish(grid);
+// 맵을 관리하고 업데이트하는 함수
+void updateMap(std::vector<int8_t>& map, int width, int height, const std::vector<std::pair<float, float>>& obstacles) {
+    for (auto& obstacle : obstacles) {
+        int x = static_cast<int>(obstacle.first + width / 2);
+        int y = static_cast<int>(obstacle.second + height / 2);
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            map[y * width + x] = 100;
+        }
     }
+}
 
-private:
-    int width_, height_;
-    std::vector<int8_t> map_;
-};
+// 맵을 발행하는 함수
+void publishMap(ros::Publisher& map_pub, const std::vector<int8_t>& map, int width, int height) {
+    nav_msgs::OccupancyGrid grid;
+    grid.header.stamp = ros::Time::now();
+    grid.header.frame_id = "map";
+    grid.info.width = width;
+    grid.info.height = height;
+    grid.data = map;
+    map_pub.publish(grid);
+}
 
-class SimpleSLAM {
-public:
-    SimpleSLAM(ros::NodeHandle& nh) : nh_(nh) {
-        lidar_processor_ = std::make_unique<LidarProcessor>();
-        map_manager_ = std::make_unique<MapManager>(100, 100); 
-        lidar_sub_ = nh_.subscribe("/scan", 1000, &SimpleSLAM::lidarCallback, this);
-        map_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("/map", 10);
-    }
-
-    void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& scan) {
-        auto obstacles = lidar_processor_->processScan(scan);
-        map_manager_->updateMap(obstacles);
-        map_manager_->publishMap(map_pub_);
-    }
-
-    void run() {
-        ros::spin();
-    }
-
-private:
-    ros::NodeHandle nh_;
-    std::unique_ptr<LidarProcessor> lidar_processor_;
-    std::unique_ptr<MapManager> map_manager_;
-    ros::Subscriber lidar_sub_;
-    ros::Publisher map_pub_;
-};
+// 라이다 콜백 함수
+void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& scan, ros::Publisher& map_pub, std::vector<int8_t>& map, int width, int height) {
+    auto obstacles = processScan(scan);
+    updateMap(map, width, height, obstacles);
+    publishMap(map_pub, map, width, height);
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "simple_slam");
     ros::NodeHandle nh;
 
-    SimpleSLAM slam(nh);
-    slam.run();
+    std::vector<int8_t> map(100 * 100, -1); // 맵 초기화
+    ros::Publisher map_pub = nh.advertise<nav_msgs::OccupancyGrid>("/map", 10);
+    ros::Subscriber lidar_sub = nh.subscribe<sensor_msgs::LaserScan>("/scan", 1000, boost::bind(lidarCallback, _1, boost::ref(map_pub), boost::ref(map), 100, 100));
 
+    ros::spin();
     return 0;
 }
