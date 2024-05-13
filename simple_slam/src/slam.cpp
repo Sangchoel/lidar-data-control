@@ -1,9 +1,8 @@
 #include <ros/ros.h> // ROS 헤더 파일
 #include <sensor_msgs/LaserScan.h> // 라이다 스캔 메시지 헤더
 #include <nav_msgs/OccupancyGrid.h> // 점유 격자 맵 메시지 헤더
-#include <vector> // 벡터 사용
-#include <cmath> // 수학 함수 사용
-
+#include <vector>
+#include <cmath>
 // 라이다 데이터를 처리하는 클래스
 class LidarProcessor {
 public:
