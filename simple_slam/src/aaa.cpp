@@ -8,6 +8,7 @@
 
 class LidarProcessor {
 public:
+//생성자
     LidarProcessor(double resolution, double robot_x, double robot_y, double robot_theta)
         : resolution_(resolution), robot_x_(robot_x), robot_y_(robot_y), robot_theta_(robot_theta) {}
 
