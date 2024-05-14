@@ -34,7 +34,9 @@ private:
 
     // 가우시안 필터를 적용하는 함수
     std::vector<float> applyGaussianFilter(const std::vector<float>& input, int window_size, double sigma) {
-        int half_window = window_size / 2;
+        // 이 값은 가우시안 필터를 적용할 때 현재 데이터 포인트를 중심으로 좌우 각각 몇 개의 데이터 포인트를 포함할지 결정합니다.
+// 'window_size'의 총 크기에 대해, 'half_window'는 각 데이터 포인트의 좌우 양쪽에서 고려될 포인트 수를 나타냅니다.
+        int half_window = window_size / 2; 
         std::vector<float> output(input.size(), 0.0);
 
         // 가우시안 커널 생성
