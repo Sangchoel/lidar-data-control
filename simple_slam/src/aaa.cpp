@@ -35,29 +35,43 @@ private:
     // 가우시안 필터를 적용하는 함수
     std::vector<float> applyGaussianFilter(const std::vector<float>& input, int window_size, double sigma) {
         // 이 값은 가우시안 필터를 적용할 때 현재 데이터 포인트를 중심으로 좌우 각각 몇 개의 데이터 포인트를 포함할지 결정합니다.
-// 'window_size'의 총 크기에 대해, 'half_window'는 각 데이터 포인트의 좌우 양쪽에서 고려될 포인트 수를 나타냅니다.
+        // 'window_size'의 총 크기에 대해, 'half_window'는 각 데이터 포인트의 좌우 양쪽에서 고려될 포인트 수를 나타냅니다.
         int half_window = window_size / 2; 
         std::vector<float> output(input.size(), 0.0);
 
-        // 가우시안 커널 생성
+        // 가우시안 커널 배열을 생성하고 모든 요소를 0.0으로 초기화합니다.
         std::vector<double> kernel(window_size, 0.0);
+        // 커널 가중치의 총합을 저장할 변수를 0.0으로 초기화합니다.
         double kernel_sum = 0.0;
+
+            // 가우시안 커널을 계산합니다.
         for (int i = -half_window; i <= half_window; ++i) {
+            // 커널의 각 위치에 대한 가우시안 함수 값을 계산하여 저장합니다.
+            // exp(-(i * i) / (2 * sigma * sigma))는 가우시안 공식을 이용하여 각 포인트의 가중치를 계산합니다.
+            // sqrt(2 * M_PI) * sigma는 정규화 상수입니다.
             kernel[i + half_window] = exp(-(i * i) / (2 * sigma * sigma)) / (sqrt(2 * M_PI) * sigma);
+            // 계산된 가중치를 총합에 더합니다.
             kernel_sum += kernel[i + half_window];
         }
+
         // 커널 정규화
+        // 커널의 모든 가중치 값을 커널 가중치의 총합으로 나누어 정규화합니다.
         for (int i = 0; i < window_size; ++i) {
             kernel[i] /= kernel_sum;
-        }
+            }
 
         // 가우시안 필터 적용
+        // 입력 데이터에 대해 가우시안 필터를 적용합니다.
         for (size_t i = 0; i < input.size(); ++i) {
+            // 현재 데이터 포인트를 중심으로 커널을 적용합니다.
             for (int j = -half_window; j <= half_window; ++j) {
+                // 인덱스 범위 확인: 범위를 벗어나는 인덱스는 경계값을 사용합니다.
                 int index = std::max(0, std::min(int(input.size() - 1), int(i + j)));
+                // 가중치가 적용된 입력값을 현재 포인트의 결과값에 누적합니다.
                 output[i] += input[index] * kernel[j + half_window];
-            }
+                }
         }
+
 
         return output;
     }
