@@ -14,7 +14,7 @@ public:
 
     std::vector<std::pair<double, double>> processScan(const sensor_msgs::LaserScan::ConstPtr& scan) {
         std::vector<std::pair<double, double>> obstacles;
-        std::vector<float> filtered_ranges = applyGaussianFilter(scan->ranges, 5, 1.0); // 가우시안 필터 적용
+        std::vector<float> filtered_ranges = applyGaussianFilter(scan->ranges, 5, 1.0); // 가우시안 필터 적용 입력데이터, 커널 사이즈, 필터폭(클스록부드러운 출력넓은 범위에 영향) 
 
         for (unsigned int i = 0; i < filtered_ranges.size(); ++i) {
             double angle = scan->angle_min + i * scan->angle_increment;
