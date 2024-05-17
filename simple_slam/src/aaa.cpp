@@ -182,11 +182,6 @@ private:
 };
 
 int main(int argc, char** argv)
-//- argc는 운영체제가 이 프로그램을 실행했을 때 전달되는 인수의 갯수이다. 
-//- 즉, main()함수에 전달되는 데이터의 갯수를 의미한다.
-//- char* argv[]: 문자열의 주소를 저장하는 포인터 배열
-//- argv[0]은 프로그램의 실행경로이다.
-//- argv[1], argv[2] ... 에는 순서대로 사용자가 입력한 argument가 저장된다.
 {
     ros::init(argc, argv, "simple_slam");
     ros::NodeHandle nh;
